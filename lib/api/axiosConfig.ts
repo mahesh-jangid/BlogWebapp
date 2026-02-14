@@ -1,16 +1,26 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
+  withCredentials: true, // cookies support
 });
 
-// Request interceptor - token is sent automatically in cookies via withCredentials
+// ✅ Request interceptor - Add Bearer Token
 api.interceptors.request.use(
   (config) => {
-    // HttpOnly cookies are auto-sent with withCredentials: true
+    // Get token from localStorage (if stored there)
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("token")
+        : null;
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error) => {
@@ -18,19 +28,19 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - handle 401 and token expiry
+// ✅ Response interceptor - Handle 401
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Token is invalid or expired
-      if (typeof window !== 'undefined') {
-        // Cookie is automatically cleared by backend
-        // Only redirect if not already on login page
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+      if (typeof window !== "undefined") {
+        // Remove invalid token
+        localStorage.removeItem("token");
+
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
         }
       }
     }
