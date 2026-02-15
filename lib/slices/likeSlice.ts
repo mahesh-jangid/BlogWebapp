@@ -26,6 +26,10 @@ export const toggleLike = createAsyncThunk(
         likeCount: response.data.likeCount,
       };
     } catch (error: any) {
+      // Handle 401 - not authenticated
+      if (error.response?.status === 401) {
+        return rejectWithValue('Please login to like blogs');
+      }
       return rejectWithValue(error.response?.data?.message || 'Failed to toggle like');
     }
   }

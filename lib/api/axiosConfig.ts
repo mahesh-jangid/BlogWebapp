@@ -28,22 +28,14 @@ api.interceptors.request.use(
   }
 );
 
-// ✅ Response interceptor - Handle 401
+// ✅ Response interceptor - Handle errors (DO NOT auto-redirect on 401)
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        // Remove invalid token
-        localStorage.removeItem("token");
-
-        if (window.location.pathname !== "/login") {
-          window.location.href = "/login";
-        }
-      }
-    }
+    // Let the application handle 401 errors through Redux and component logic
+    // Don't auto-redirect to avoid disrupting user experience
     return Promise.reject(error);
   }
 );
