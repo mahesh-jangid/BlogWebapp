@@ -25,17 +25,25 @@ interface Blog {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated, isCheckingAuth } = useSelector((state: RootState) => state.auth);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    // Wait for auth checking to complete
+    if (!isHydrated || isCheckingAuth) return;
+
     if (!isAuthenticated || (user?.role !== 'author' && user?.role !== 'admin')) {
       router.push('/login');
     } else {
       fetchUserBlogs();
     }
-  }, [isAuthenticated, user, router]);
+  }, [isHydrated, isCheckingAuth, isAuthenticated, user, router]);
 
   const fetchUserBlogs = useCallback(async () => {
     try {

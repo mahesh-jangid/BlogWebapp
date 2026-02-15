@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
@@ -9,16 +9,46 @@ import AdminUsers from '@/components/admin/AdminUsers';
 
 export default function AdminPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated, isCheckingAuth } = useSelector((state: RootState) => state.auth);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== 'admin') {
-      router.push('/login');
-    }
-  }, [isAuthenticated, user, router]);
+    // Mark as hydrated - component is now running on client
+    setIsHydrated(true);
+  }, []);
 
-  if (!isAuthenticated || user?.role !== 'admin') {
-    return null;
+  useEffect(() => {
+    // Wait for BOTH hydration AND auth checking to complete
+    if (!isHydrated || isCheckingAuth) return;
+
+    // Now we can safely check authentication
+    if (!isAuthenticated) {
+      console.warn('⚠️ User not authenticated, redirecting to login');
+      router.push('/login');
+      return;
+    }
+
+    if (!user || user.role !== 'admin') {
+      console.warn('⚠️ User is not admin, redirecting to home');
+      router.push('/');
+      return;
+    }
+
+    // User is authorized
+    setIsAuthorized(true);
+  }, [isHydrated, isCheckingAuth, isAuthenticated, user, router]);
+
+  // Show loading state during hydration/auth check
+  if (!isHydrated || !isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600">Verifying permissions...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

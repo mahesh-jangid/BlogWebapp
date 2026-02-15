@@ -19,6 +19,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  isCheckingAuth: boolean; // NEW: Track if auth is being verified
 }
 
 const initialState: AuthState = {
@@ -27,6 +28,7 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   isAuthenticated: false,
+  isCheckingAuth: true, // Start as true - assume we're checking auth on init
 };
 
 export const register = createAsyncThunk(
@@ -152,15 +154,19 @@ const authSlice = createSlice({
     // Get Profile
     builder.addCase(getProfile.pending, (state) => {
       state.isLoading = true;
+      state.isCheckingAuth = true;
     });
     builder.addCase(getProfile.fulfilled, (state, action) => {
       state.isLoading = false;
+      state.isCheckingAuth = false;
       state.user = action.payload;
       state.isAuthenticated = true;
     });
     builder.addCase(getProfile.rejected, (state) => {
       state.isLoading = false;
+      state.isCheckingAuth = false;
       state.isAuthenticated = false;
+      state.user = null;
     });
 
     // Update Profile
