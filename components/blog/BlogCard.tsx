@@ -156,7 +156,14 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {loading ? (
-              <div className="text-center py-8 text-gray-500">Loading comments...</div>
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="inline-block mb-3">
+                    <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  </div>
+                  <p className="text-gray-500 text-sm font-medium">Loading comments...</p>
+                </div>
+              </div>
             ) : comments.length > 0 ? (
               comments.map((comment: Comment) => (
                 <div key={comment._id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100">
@@ -219,9 +226,16 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
             <button
               type="submit"
               disabled={isSubmitting || !newComment.trim()}
-              className="mt-3 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 text-sm font-medium"
+              className="mt-3 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 text-sm font-medium flex items-center justify-center gap-2"
             >
-              {isSubmitting ? 'Posting...' : 'Post Comment'}
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Posting...</span>
+                </>
+              ) : (
+                'Post Comment'
+              )}
             </button>
           </form>
         ) : (
@@ -353,10 +367,19 @@ export default function BlogCard({ blog }: any) {
                 isLiked
                   ? 'bg-red-50 text-red-600 font-semibold'
                   : 'bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-600'
-              } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              } ${isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              <span>{isLiked ? '❤️' : '🤍'}</span>
-              <span>{likeCount}</span>
+              {isLoading ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                  <span>...</span>
+                </>
+              ) : (
+                <>
+                  <span>{isLiked ? '❤️' : '🤍'}</span>
+                  <span>{likeCount}</span>
+                </>
+              )}
             </button>
 
             {/* Comments */}

@@ -362,14 +362,23 @@ const AdminUsers = memo(() => {
             <button
               onClick={editingId ? handleUpdateUser : handleCreateUser}
               disabled={loading || (!!editingId && !hasUserChanges)}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2 flex-1"
             >
-              {loading ? 'Processing...' : editingId ? '💾 Update User' : '✨ Create User'}
+              {loading ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Processing...</span>
+                </>
+              ) : editingId ? (
+                '💾 Update User'
+              ) : (
+                '✨ Create User'
+              )}
             </button>
             <button
               onClick={handleCancel}
               disabled={loading}
-              className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 font-semibold"
+              className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 font-semibold flex-1"
             >
               Cancel
             </button>

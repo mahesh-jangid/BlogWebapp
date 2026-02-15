@@ -248,9 +248,16 @@ function AdminCategories() {
             <button
               type="submit"
               disabled={submitLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition disabled:from-gray-400 disabled:to-gray-400 font-semibold shadow-md"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition disabled:from-gray-400 disabled:to-gray-400 font-semibold shadow-md flex items-center justify-center gap-2"
             >
-              {submitLoading ? 'Creating...' : 'Create'}
+              {submitLoading ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Creating...</span>
+                </>
+              ) : (
+                'Create'
+              )}
             </button>
           </div>
         </div>
@@ -402,9 +409,16 @@ function AdminCategories() {
                 <button
                   type="submit"
                   disabled={submitLoading || JSON.stringify(editingCategory) === JSON.stringify(originalCategory)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed font-medium"
+                  className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
                 >
-                  {submitLoading ? 'Updating...' : 'Update'}
+                  {submitLoading ? (
+                    <>
+                      <span className="inline-block w-2 h-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    'Update'
+                  )}
                 </button>
               </div>
             </form>

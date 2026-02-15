@@ -105,7 +105,7 @@ export default function BlogDetailPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">{selectedBlog.title}</h1>
           <div className="flex items-center justify-between mb-6 pb-6 border-b">
             <div className="flex items-center gap-4">
-              <Image
+              <img
                 src={selectedBlog.author.profileImage || `https://ui-avatars.com/api/?name=${selectedBlog.author.username}`}
                 alt={selectedBlog.author.username}
                 width={48}

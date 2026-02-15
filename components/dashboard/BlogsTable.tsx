@@ -113,10 +113,8 @@ export default memo(function BlogsTable({ blogs, isLoading, onBlogDeleted }: Blo
 
   if (isLoading) {
     return (
-      <div className="p-6 text-center text-gray-500">
-        <div className="inline-block">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-        </div>
+      <div className="p-6 text-center">
+        <div className="inline-block w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
       </div>
     );
   }

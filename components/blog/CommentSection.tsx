@@ -126,9 +126,16 @@ export default function CommentSection({ blogId }: { blogId: string }) {
           <button
             type="submit"
             disabled={isSubmitting || !newComment.trim()}
-            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
           >
-            {isSubmitting ? 'Posting...' : 'Post Comment'}
+            {isSubmitting ? (
+              <>
+                <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>Posting...</span>
+              </>
+            ) : (
+              'Post Comment'
+            )}
           </button>
         </form>
       ) : (
@@ -146,7 +153,14 @@ export default function CommentSection({ blogId }: { blogId: string }) {
       {/* Comments List */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">Loading comments...</div>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="inline-block mb-3">
+                <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+              </div>
+              <p className="text-gray-500 text-sm font-medium">Loading comments...</p>
+            </div>
+          </div>
         ) : comments && comments.length > 0 ? (
           comments.map((comment: Comment) => (
             <div key={comment._id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">

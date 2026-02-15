@@ -173,7 +173,14 @@ export default function CommentsModal({ blogId, onClose, onCommentAdded }: Comme
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {loading ? (
-              <div className="text-center py-8 text-gray-500">Loading comments...</div>
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="inline-block mb-3">
+                    <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  </div>
+                  <p className="text-gray-500 text-sm font-medium">Loading comments...</p>
+                </div>
+              </div>
             ) : comments.length > 0 ? (
               comments.map((comment: Comment) => (
                 <div key={comment._id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
@@ -248,9 +255,16 @@ export default function CommentsModal({ blogId, onClose, onCommentAdded }: Comme
             <button
               type="submit"
               disabled={isSubmitting || !newComment.trim()}
-              className="mt-3 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
+              className="mt-3 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium flex items-center justify-center gap-2"
             >
-              {isSubmitting ? 'Posting...' : 'Post Comment'}
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Posting...</span>
+                </>
+              ) : (
+                'Post Comment'
+              )}
             </button>
           </form>
         ) : (
