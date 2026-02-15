@@ -33,6 +33,18 @@ function AdminCategories() {
     dispatch(fetchCategories());
   }, [dispatch]);
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
   const handleCreateCategory = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const errors: string[] = [];
@@ -316,7 +328,7 @@ function AdminCategories() {
 
       {/* Edit Modal */}
       {isModalOpen && editingCategory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{backgroundColor: 'rgba(0, 0, 0, 0.1)'}}>
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
