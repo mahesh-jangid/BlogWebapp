@@ -79,6 +79,11 @@ export default function CommentsModal({ blogId, onClose, onCommentAdded }: Comme
       return;
     }
 
+    if (!user) {
+      toast.error('User information is not available. Please login again');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await api.post('/comments', {
@@ -94,7 +99,13 @@ export default function CommentsModal({ blogId, onClose, onCommentAdded }: Comme
       }
     } catch (error: any) {
       console.error('Error posting comment:', error);
-      toast.error(error?.response?.data?.message || 'Failed to post comment');
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to comment');
+      } else {
+        toast.error(error?.response?.data?.message || 'Failed to post comment');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -130,9 +141,16 @@ export default function CommentsModal({ blogId, onClose, onCommentAdded }: Comme
         );
       }
       setLikedComments(new Set(likedComments));
+      toast.success(isLiked ? '💔 Like removed' : '❤️ Comment liked!');
     } catch (error: any) {
       console.error('Error liking comment:', error);
-      toast.error('Failed to update like');
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to like comments');
+      } else {
+        toast.error('Failed to update like');
+      }
     }
   };
 

@@ -12,13 +12,20 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Get token from localStorage (if stored there)
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("token")
-        : null;
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // This runs on every request to ensure fresh token is used
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('✅ Token added to request header');
+      } else {
+        // If no token in localStorage, still allow request with cookies
+        // Delete Authorization header to avoid sending undefined
+        if (config.headers.Authorization) {
+          delete config.headers.Authorization;
+        }
+      }
     }
 
     return config;
@@ -34,6 +41,10 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Log token issues for debugging
+    if (error.response?.status === 401) {
+      console.warn('⚠️ 401 Unauthorized - Token may be invalid or missing');
+    }
     // Let the application handle 401 errors through Redux and component logic
     // Don't auto-redirect to avoid disrupting user experience
     return Promise.reject(error);

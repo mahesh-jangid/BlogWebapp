@@ -66,6 +66,16 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
     e.preventDefault();
     if (!newComment.trim()) return;
 
+    if (!isAuthenticated) {
+      toast.error('Please login to comment');
+      return;
+    }
+
+    if (!user) {
+      toast.error('User information is not available. Please login again');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await api.post('/comments', { content: newComment, blogId });
@@ -77,13 +87,24 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
         onCommentAdded(comments.length + 1);
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to post comment');
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to comment');
+      } else {
+        toast.error(error?.response?.data?.message || 'Failed to post comment');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleLikeComment = async (commentId: string) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Please login to like comments');
+      return;
+    }
+
     try {
       const isLiked = likedComments.has(commentId);
       await api.post(`/comments/${commentId}/like`);
@@ -108,8 +129,16 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
         );
       }
       setLikedComments(new Set(likedComments));
+      toast.success(isLiked ? '💔 Like removed' : '❤️ Comment liked!');
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to like comment');
+      console.error('Error liking comment:', error);
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to like comments');
+      } else {
+        toast.error('Failed to like comment');
+      }
     }
   };
 
@@ -267,12 +296,22 @@ export default function BlogCard({ blog }: any) {
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
 
+    if (!isAuthenticated) {
+      toast.error('Please login to like blogs');
+      return;
+    }
+
     try {
       const result = await dispatch(toggleLike(blog._id)).unwrap();
       setIsLiked(result.liked);
       setLikeCount(result.likeCount);
+      toast.success(result.liked ? '❤️ Blog liked!' : '💔 Like removed');
     } catch (error: any) {
-      toast.error(error || 'Failed to update like');
+      if (error === 'Please login to like blogs' || error.includes('401')) {
+        toast.error('Authentication failed. Please login again');
+      } else {
+        toast.error(error || 'Failed to update like');
+      }
     }
   };
 

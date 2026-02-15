@@ -169,12 +169,20 @@ const authSlice = createSlice({
       state.isCheckingAuth = false;
       state.user = action.payload;
       state.isAuthenticated = true;
+      // Restore token from localStorage if exists (for client-side navigation/refresh)
+      if (typeof window !== 'undefined') {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+          state.token = storedToken;
+        }
+      }
     });
     builder.addCase(getProfile.rejected, (state) => {
       state.isLoading = false;
       state.isCheckingAuth = false;
       state.isAuthenticated = false;
       state.user = null;
+      state.token = null;
     });
 
     // Update Profile

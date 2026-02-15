@@ -57,13 +57,24 @@ export default function CommentSection({ blogId }: { blogId: string }) {
       return;
     }
 
+    if (!user) {
+      toast.error('User information is not available. Please login again');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await dispatch(createComment({ content: newComment, blogId })).unwrap();
       setNewComment('');
       toast.success('📝 Comment posted successfully!');
     } catch (error: any) {
-      toast.error(error || 'Failed to post comment');
+      if (error === 'Please login to comment' || error.includes('401')) {
+        toast.error('Authentication failed. Please login again');
+      } else if (error.includes('403')) {
+        toast.error('You do not have permission to comment');
+      } else {
+        toast.error(error || 'Failed to post comment');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -72,6 +83,11 @@ export default function CommentSection({ blogId }: { blogId: string }) {
   const handleLikeComment = async (commentId: string) => {
     if (!isAuthenticated) {
       toast.error('Please login to like comments');
+      return;
+    }
+
+    if (!user) {
+      toast.error('User information is not available. Please login again');
       return;
     }
 
@@ -87,7 +103,14 @@ export default function CommentSection({ blogId }: { blogId: string }) {
       setLikedComments(new Set(likedComments));
       toast.success(isLiked ? '💔 Like removed' : '❤️ Comment liked!');
     } catch (error: any) {
-      toast.error('Failed to update like');
+      console.error('Error liking comment:', error);
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to like comments');
+      } else {
+        toast.error('Failed to update like');
+      }
     }
   };
 
