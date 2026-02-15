@@ -23,11 +23,31 @@ export default function BlogDetailPage() {
       dispatch(fetchBlogById(blogId));
       
       // Increment view count when blog is viewed
-      api.post(`/blogs/${blogId}/view`).catch((err) => {
-        console.error('Error tracking view:', err);
-      });
+      const trackView = async () => {
+        try {
+          // For guests: check if they've already viewed this blog
+          const viewedBlogsKey = 'viewedBlogs';
+          const viewedBlogs = JSON.parse(localStorage.getItem(viewedBlogsKey) || '[]');
+          const hasGuestViewed = viewedBlogs.includes(blogId);
+          const isGuestFirstView = !user && !hasGuestViewed;
+
+          await api.post(`/blogs/${blogId}/view`, {
+            isGuestFirstView,
+          });
+
+          // Track guest view in localStorage
+          if (isGuestFirstView) {
+            viewedBlogs.push(blogId);
+            localStorage.setItem(viewedBlogsKey, JSON.stringify(viewedBlogs));
+          }
+        } catch (err) {
+          console.error('Error tracking view:', err);
+        }
+      };
+
+      trackView();
     }
-  }, [params?.id, dispatch]);
+  }, [params?.id, dispatch, user]);
 
   const handleLike = async () => {
     try {
@@ -103,8 +123,9 @@ export default function BlogDetailPage() {
                 </p>
               </div>
             </div>
-            <div className="text-sm text-gray-500">
-              📖 {selectedBlog.readTime} min read
+            <div className="flex gap-4 text-sm text-gray-500">
+              <span>📖 {selectedBlog.readTime} min read</span>
+              <span>👁️ {selectedBlog.viewCount || 0} views</span>
             </div>
           </div>
         </header>
