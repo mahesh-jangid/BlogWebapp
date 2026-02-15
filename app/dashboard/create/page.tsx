@@ -143,7 +143,7 @@ export default function CreateBlogPage() {
         title: formData.title,
         content: formData.content,
         excerpt: formData.excerpt || formData.content.substring(0, 150),
-        category: formData.category || null,
+        category: formData.category || undefined,
         featuredImage: formData.featuredImage,
         tags: formData.tags.split(',').map(t => t.trim()).filter(t => t),
       };
