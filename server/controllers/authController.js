@@ -44,13 +44,15 @@ exports.register = async (req, res, next) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
     });
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
+      token,
       user: user.toJSON(),
     });
   } catch (error) {
@@ -98,17 +100,19 @@ exports.login = async (req, res, next) => {
     // Generate token
     const token = generateToken(user._id, user.role);
 
-    // Set HttpOnly cookie
+    // Set HttpOnly cookie - Use lax instead of strict to allow cross-origin cookie sending
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
     });
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
+      token,
       user: user.toJSON(),
     });
   } catch (error) {

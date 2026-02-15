@@ -112,6 +112,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      // Clear token from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
       // Cookie is cleared on backend via logout endpoint
     },
     clearError: (state) => {
@@ -145,6 +149,10 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      // Store token in localStorage for axios to use
+      if (typeof window !== 'undefined' && action.payload.token) {
+        localStorage.setItem('token', action.payload.token);
+      }
     });
     builder.addCase(login.rejected, (state, action) => {
       state.isLoading = false;
@@ -189,12 +197,20 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      // Clear token from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
     });
     builder.addCase(logoutAsync.rejected, (state) => {
       // Clear state even if logout fails (cookie might be cleared)
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      // Clear token from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
     });
   },
 });
