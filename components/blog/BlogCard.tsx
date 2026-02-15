@@ -66,11 +66,6 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
     e.preventDefault();
     if (!newComment.trim()) return;
 
-    if (!isAuthenticated) {
-      toast.error('Please login to comment');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const response = await api.post('/comments', { content: newComment, blogId });
@@ -89,11 +84,6 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
   };
 
   const handleLikeComment = async (commentId: string) => {
-    if (!isAuthenticated || !user) {
-      toast.error('Please login to like comments');
-      return;
-    }
-
     try {
       const isLiked = likedComments.has(commentId);
       await api.post(`/comments/${commentId}/like`);
@@ -119,7 +109,7 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
       }
       setLikedComments(new Set(likedComments));
     } catch (error: any) {
-      toast.error('Failed to update like');
+      toast.error(error?.response?.data?.message || 'Failed to like comment');
     }
   };
 
@@ -276,11 +266,6 @@ export default function BlogCard({ blog }: any) {
 
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
-    if (!isAuthenticated) {
-      toast.error('Please login to like blogs');
-      return;
-    }
 
     try {
       const result = await dispatch(toggleLike(blog._id)).unwrap();
