@@ -46,11 +46,18 @@ export default function DashboardPage() {
   }, [isHydrated, isCheckingAuth, isAuthenticated, user, router]);
 
   const fetchUserBlogs = useCallback(async () => {
+    if (!user?._id) return;
+    
     try {
-      const response = await api.get(`/blogs/author/${user?._id}`);
+      const controller = new AbortController();
+      const response = await api.get(`/blogs/author/${user._id}`, {
+        signal: controller.signal,
+      });
       setBlogs(response.data.blogs);
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('Error fetching blogs:', error);
+      }
     } finally {
       setIsLoading(false);
     }

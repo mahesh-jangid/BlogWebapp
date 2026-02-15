@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
-import { RootState } from '@/lib/store/store';
+import { fetchCategories } from '@/lib/slices/categorySlice';
+import { fetchBlogById, updateBlog } from '@/lib/slices/blogSlice';
+import { RootState, AppDispatch } from '@/lib/store/store';
 import api from '@/lib/api/axiosConfig';
 import { validateBlogForm, getFormProgress, isFieldComplete } from '@/lib/validations';
 
@@ -18,10 +20,12 @@ interface Category {
 export default function EditBlogPage() {
   const router = useRouter();
   const params = useParams();
+  const dispatch = useDispatch<AppDispatch>();
   const blogId = Array.isArray(params.id) ? params.id[0] : params.id;
   
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { selectedBlog } = useSelector((state: RootState) => state.blogs);
+  const { categories } = useSelector((state: RootState) => state.categories);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -46,51 +50,48 @@ export default function EditBlogPage() {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
+  // Fetch blog and categories on mount
   useEffect(() => {
     if (!isAuthenticated || (user?.role !== 'author' && user?.role !== 'admin')) {
       router.push('/login');
-    } else {
-      fetchBlogAndCategories();
+      return;
     }
-  }, [isAuthenticated, user, router, blogId]);
 
-  const fetchBlogAndCategories = async () => {
-    try {
-      const [blogResponse, categoriesResponse] = await Promise.all([
-        api.get(`/blogs/${blogId}`),
-        api.get('/categories'),
-      ]);
+    if (!blogId) return;
 
-      const blog = blogResponse.data.blog;
+    if (selectedBlog?._id !== blogId) {
+      dispatch(fetchBlogById(blogId));
+    }
+    
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [blogId, isAuthenticated, user, router, dispatch, categories.length, selectedBlog?._id]);
 
-      // Check if user is author or admin
-      if (blog.author._id !== user?._id && user?.role !== 'admin') {
+  // Populate form once blog is loaded
+  useEffect(() => {
+    if (selectedBlog && selectedBlog._id === blogId) {
+      // Check authorization
+      if (selectedBlog.author._id !== user?._id && user?.role !== 'admin') {
         router.push('/dashboard');
         return;
       }
 
       const initialFormData = {
-        title: blog.title,
-        content: blog.content,
-        excerpt: blog.excerpt || '',
-        category: blog.category?._id || '',
-        featuredImage: blog.featuredImage || '',
-        tags: blog.tags?.join(', ') || '',
-        published: blog.published,
+        title: selectedBlog.title,
+        content: selectedBlog.content,
+        excerpt: selectedBlog.excerpt || '',
+        category: selectedBlog.category?._id || '',
+        featuredImage: selectedBlog.featuredImage || '',
+        tags: selectedBlog.tags?.join(', ') || '',
+        published: selectedBlog.published,
       };
 
       setFormData(initialFormData);
       setOriginalFormData(initialFormData);
-
-      setCategories(categoriesResponse.data.categories);
-    } catch (error: any) {
-      console.error('Error fetching blog:', error);
-      setErrorMessage(error.response?.data?.message || 'Error loading blog');
-      setTimeout(() => router.push('/dashboard'), 2000);
-    } finally {
       setLoading(false);
     }
-  };
+  }, [selectedBlog, blogId, user, router]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -150,25 +151,26 @@ export default function EditBlogPage() {
         title: formData.title,
         content: formData.content,
         excerpt: formData.excerpt || formData.content.substring(0, 150),
-        category: formData.category || null,
+        category: formData.category || undefined,
         featuredImage: formData.featuredImage,
         tags: formData.tags.split(',').map((t) => t.trim()).filter((t) => t),
         published: formData.published,
       };
 
-      await api.put(`/blogs/${blogId}`, payload);
+      if (!blogId) {
+        throw new Error('Blog ID is missing');
+      }
+
+      await dispatch(updateBlog({ id: blogId, data: payload })).unwrap();
       setSuccessMessage('Blog updated successfully! Redirecting...');
       toast.success('✨ Blog updated successfully! Redirecting...');
       
       setTimeout(() => {
         router.push('/dashboard');
       }, 1500);
-      // setTimeout(() => {
-      //   router.push('/dashboard');
-      // }, 1500);
     } catch (error: any) {
       console.error('Error updating blog:', error);
-      const message = error.response?.data?.message || error.message || 'Error updating blog';
+      const message = error || 'Error updating blog';
       setErrorMessage(message);
     } finally {
       setLoading(false);

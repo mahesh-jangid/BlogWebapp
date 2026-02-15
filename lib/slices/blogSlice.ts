@@ -108,7 +108,7 @@ export const createBlog = createAsyncThunk(
 export const updateBlog = createAsyncThunk(
   'blogs/updateBlog',
   async (
-    { id, data }: { id: string; data: Partial<Blog> },
+    { id, data }: { id: string; data: any },
     { rejectWithValue }
   ) => {
     try {

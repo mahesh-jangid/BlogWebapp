@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/lib/store/store';
+import { fetchCategories } from '@/lib/slices/categorySlice';
+import { createBlog } from '@/lib/slices/blogSlice';
 import api from '@/lib/api/axiosConfig';
 import { validateBlogForm, getFormProgress } from '@/lib/validations';
 import { uploadImageToFirebase } from '@/lib/firebase/storage';
@@ -19,8 +21,9 @@ interface Category {
 
 export default function CreateBlogPage() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories } = useSelector((state: RootState) => state.categories);
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -42,18 +45,12 @@ export default function CreateBlogPage() {
     if (!isAuthenticated || (user?.role !== 'author' && user?.role !== 'admin')) {
       router.push('/login');
     } else {
-      fetchCategories();
+      // Fetch categories if not already in Redux
+      if (categories.length === 0) {
+        dispatch(fetchCategories());
+      }
     }
-  }, [isAuthenticated, user, router]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/categories');
-      setCategories(response.data.categories);
-    } catch (error: any) {
-      console.error('Error fetching categories:', error);
-    }
-  };
+  }, [isAuthenticated, user, router, dispatch, categories.length]);
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,18 +148,17 @@ export default function CreateBlogPage() {
         tags: formData.tags.split(',').map(t => t.trim()).filter(t => t),
       };
 
-      const response = await api.post('/blogs', payload);
+      const result = await dispatch(createBlog(payload)).unwrap();
       toast.success('✓ Blog created successfully! Redirecting...');
       setTimeout(() => {
-        // Redirect using the blog ID instead of slug for more reliability
-        router.push(`/blogs/${response.data.blog._id}`);
+        router.push(`/blogs/${result._id}`);
       }, 1000);
     } catch (error: any) {
       console.error('Error creating blog:', error);
-      const message = error.response?.data?.message || error.message || 'Error creating blog';
+      const message = error || 'Error creating blog';
       setErrorMessage(message);
       toast.error(message);
-      if (error.response?.status === 401) {
+      if (error === 'Unauthorized') {
         setErrorMessage('Your session has expired. Please log in again.');
         setTimeout(() => router.push('/login'), 2000);
       }

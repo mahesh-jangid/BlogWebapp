@@ -14,26 +14,27 @@ function AppInitializer({ children }: { children: ReactNode }) {
   const { isAuthenticated, isCheckingAuth } = useSelector((state: RootState) => state.auth);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize auth state on app load and handle hydration
+  // Initialize auth state on app load - runs only ONCE
   useEffect(() => {
+    let isMounted = true;
+
     const initializeAuth = async () => {
       try {
-        // This will check the backend using the HttpOnly cookie
-        // If valid, it sets the Redux state
-        // getProfile sets isCheckingAuth to false when done
         await dispatch(getProfile()).unwrap();
-        console.log('✅ Auth restored from cookie');
+        if (isMounted) console.log('✅ Auth restored from cookie');
       } catch (err) {
-        // Cookie expired or invalid - user needs to log in again
-        console.warn('⚠️ Auth cookie invalid or expired');
+        if (isMounted) console.warn('⚠️ Auth cookie invalid or expired');
       } finally {
-        setIsInitialized(true);
+        if (isMounted) setIsInitialized(true);
       }
     };
 
-    // Always check auth on initial load
     initializeAuth();
-  }, [dispatch]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - runs only once on mount
 
   // Show loading while auth is being checked
   if (isCheckingAuth && !isInitialized) {
