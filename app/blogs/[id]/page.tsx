@@ -29,9 +29,11 @@ export default function BlogDetailPage() {
           const viewedBlogsKey = 'viewedBlogs';
           const viewedBlogs = JSON.parse(localStorage.getItem(viewedBlogsKey) || '[]');
           const hasGuestViewed = viewedBlogs.includes(blogId);
+          
+          // Track view - backend will handle authenticated vs guest logic
           const isGuestFirstView = !user && !hasGuestViewed;
 
-          await api.post(`/blogs/${blogId}/view`, {
+          const response = await api.post(`/blogs/${blogId}/view`, {
             isGuestFirstView,
           });
 
@@ -40,6 +42,8 @@ export default function BlogDetailPage() {
             viewedBlogs.push(blogId);
             localStorage.setItem(viewedBlogsKey, JSON.stringify(viewedBlogs));
           }
+          
+          console.log('✅ View tracked:', response.data);
         } catch (err) {
           console.error('Error tracking view:', err);
         }
@@ -74,8 +78,13 @@ export default function BlogDetailPage() {
 
   if (isLoading || !selectedBlog) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block mb-4">
+            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-500 font-medium">Loading blog...</p>
+        </div>
       </div>
     );
   }
