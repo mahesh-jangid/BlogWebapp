@@ -16,15 +16,23 @@ export default function BlogDetailPage() {
   const { selectedBlog, isLoading, error } = useSelector((state: RootState) => state.blogs);
   const { user } = useSelector((state: RootState) => state.auth);
   const [liked, setLiked] = useState(false);
+  const [viewTracked, setViewTracked] = useState(false);
 
+  // Fetch blog data
   useEffect(() => {
     if (params?.id) {
       const blogId = Array.isArray(params.id) ? params.id[0] : params.id;
       dispatch(fetchBlogById(blogId));
-      
-      // Increment view count when blog is viewed
+    }
+  }, [params?.id, dispatch]);
+
+  // Track view separately to prevent double calls
+  useEffect(() => {
+    if (params?.id && selectedBlog && !viewTracked) {
       const trackView = async () => {
         try {
+          const blogId = Array.isArray(params.id) ? params.id[0] : params.id;
+          
           // For guests: check if they've already viewed this blog
           const viewedBlogsKey = 'viewedBlogs';
           const viewedBlogs = JSON.parse(localStorage.getItem(viewedBlogsKey) || '[]');
@@ -43,6 +51,7 @@ export default function BlogDetailPage() {
             localStorage.setItem(viewedBlogsKey, JSON.stringify(viewedBlogs));
           }
           
+          setViewTracked(true);
           console.log('✅ View tracked:', response.data);
         } catch (err) {
           console.error('Error tracking view:', err);
@@ -51,7 +60,7 @@ export default function BlogDetailPage() {
 
       trackView();
     }
-  }, [params?.id, dispatch, user]);
+  }, [params?.id, selectedBlog, user, viewTracked]);
 
   const handleLike = async () => {
     try {

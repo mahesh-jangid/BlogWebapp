@@ -60,6 +60,11 @@ const blogSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    guestViewers: [
+      {
+        type: String, // Stores guest identifiers like "guest-127.0.0.1"
+      },
+    ],
     viewCount: {
       type: Number,
       default: 0,

@@ -22,7 +22,7 @@ interface Blog {
   updatedAt: string;
 }
 
-interface BlogState {
+export interface BlogState {
   blogs: Blog[];
   selectedBlog: Blog | null;
   isLoading: boolean;
@@ -30,6 +30,8 @@ interface BlogState {
   total: number;
   pages: number;
   currentPage: number;
+  cachedParams: string | null;
+  lastFetchTime: number | null;
 }
 
 const initialState: BlogState = {
@@ -40,17 +42,29 @@ const initialState: BlogState = {
   total: 0,
   pages: 0,
   currentPage: 1,
+  cachedParams: null,
+  lastFetchTime: null,
 };
 
 export const fetchBlogs = createAsyncThunk(
   'blogs/fetchBlogs',
   async (
     params: { page?: number; limit?: number; category?: string; author?: string; search?: string },
-    { rejectWithValue }
+    { rejectWithValue, getState }
   ) => {
+    const state = getState() as any;
+    const paramsString = JSON.stringify(params);
+    const lastFetch = state.blogs.lastFetchTime;
+    const cachedParams = state.blogs.cachedParams;
+    
+    // Return cached data if params match and data is fresh (less than 5 minutes)
+    if (cachedParams === paramsString && lastFetch && Date.now() - lastFetch < 5 * 60 * 1000) {
+      return null; // Signal to skip reducer update
+    }
+
     try {
       const response = await api.get('/blogs', { params });
-      return response.data;
+      return { ...response.data, _params: paramsString, _fetchTime: Date.now() };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch blogs');
     }
@@ -128,6 +142,10 @@ const blogSlice = createSlice({
     clearSelectedBlog: (state) => {
       state.selectedBlog = null;
     },
+    clearCache: (state) => {
+      state.cachedParams = null;
+      state.lastFetchTime = null;
+    },
   },
   extraReducers: (builder) => {
     // Fetch Blogs
@@ -137,10 +155,14 @@ const blogSlice = createSlice({
     });
     builder.addCase(fetchBlogs.fulfilled, (state, action) => {
       state.isLoading = false;
-      state.blogs = action.payload.blogs;
-      state.total = action.payload.total;
-      state.pages = action.payload.pages;
-      state.currentPage = action.payload.currentPage;
+      if (action.payload !== null) {
+        state.blogs = action.payload.blogs;
+        state.total = action.payload.total;
+        state.pages = action.payload.pages;
+        state.currentPage = action.payload.currentPage;
+        state.cachedParams = action.payload._params;
+        state.lastFetchTime = action.payload._fetchTime;
+      }
     });
     builder.addCase(fetchBlogs.rejected, (state, action) => {
       state.isLoading = false;
@@ -211,5 +233,5 @@ const blogSlice = createSlice({
   },
 });
 
-export const { clearError, clearSelectedBlog } = blogSlice.actions;
+export const { clearError, clearSelectedBlog, clearCache } = blogSlice.actions;
 export default blogSlice.reducer;
