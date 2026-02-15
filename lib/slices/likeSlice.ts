@@ -4,14 +4,14 @@ import api from '../api/axiosConfig';
 interface LikeState {
   likedBlogs: { [blogId: string]: boolean };
   likesCounts: { [blogId: string]: number };
-  isLoading: boolean;
+  loadingBlogs: { [blogId: string]: boolean };
   error: string | null;
 }
 
 const initialState: LikeState = {
   likedBlogs: {},
   likesCounts: {},
-  isLoading: false,
+  loadingBlogs: {},
   error: null,
 };
 
@@ -67,32 +67,36 @@ const likeSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     // Toggle Like
-    builder.addCase(toggleLike.pending, (state) => {
-      state.isLoading = true;
+    builder.addCase(toggleLike.pending, (state, action) => {
+      const blogId = action.meta.arg;
+      state.loadingBlogs[blogId] = true;
       state.error = null;
     });
     builder.addCase(toggleLike.fulfilled, (state, action) => {
-      state.isLoading = false;
       const { blogId, liked, likeCount } = action.payload;
+      state.loadingBlogs[blogId] = false;
       state.likedBlogs[blogId] = liked;
       state.likesCounts[blogId] = likeCount;
     });
     builder.addCase(toggleLike.rejected, (state, action) => {
-      state.isLoading = false;
+      const blogId = action.meta.arg;
+      state.loadingBlogs[blogId] = false;
       state.error = action.payload as string;
     });
 
     // Check Like
-    builder.addCase(checkLike.pending, (state) => {
-      state.isLoading = true;
+    builder.addCase(checkLike.pending, (state, action) => {
+      const blogId = action.meta.arg;
+      state.loadingBlogs[blogId] = true;
     });
     builder.addCase(checkLike.fulfilled, (state, action) => {
-      state.isLoading = false;
       const { blogId, liked } = action.payload;
+      state.loadingBlogs[blogId] = false;
       state.likedBlogs[blogId] = liked;
     });
     builder.addCase(checkLike.rejected, (state, action) => {
-      state.isLoading = false;
+      const blogId = action.meta.arg;
+      state.loadingBlogs[blogId] = false;
       state.error = action.payload as string;
     });
 

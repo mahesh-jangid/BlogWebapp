@@ -253,7 +253,8 @@ function CommentsModal({ blogId, onClose, onCommentAdded }: { blogId: string; on
 export default function BlogCard({ blog }: any) {
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const { likedBlogs, isLoading } = useSelector((state: RootState) => state.likes);
+  const { likedBlogs, loadingBlogs } = useSelector((state: RootState) => state.likes);
+  const isLoading = loadingBlogs[blog._id] || false;
   const [isLiked, setIsLiked] = useState(blog.isLikedByUser || false);
   const [likeCount, setLikeCount] = useState(blog.likeCount || 0);
   const [commentCount, setCommentCount] = useState(blog.commentCount || 0);
